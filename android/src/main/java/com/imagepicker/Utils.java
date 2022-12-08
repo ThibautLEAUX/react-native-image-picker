@@ -8,19 +8,17 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.hardware.camera2.CameraCharacteristics;
-import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
-import android.provider.OpenableColumns;
 import android.util.Base64;
 import android.webkit.MimeTypeMap;
 
+import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
 import androidx.exifinterface.media.ExifInterface;
@@ -219,11 +217,14 @@ public class Utils {
             OutputStream os = context.getContentResolver().openOutputStream(Uri.fromFile(file));
             b.compress(getBitmapCompressFormat(mimeType), options.quality, os);
             setOrientation(file, originalOrientation, context);
+
+            deleteFile(uri);
+
             return Uri.fromFile(file);
 
         } catch (Exception e) {
             e.printStackTrace();
-            return  null;
+            return uri; // cannot resize the image, return the original uri
         }
     }
 
@@ -271,14 +272,6 @@ public class Utils {
             e.printStackTrace();
             return 0;
         }
-    }
-
-    static int getDuration(Uri uri, Context context) {
-        MediaMetadataRetriever m = new MediaMetadataRetriever();
-        m.setDataSource(context, uri);
-        int duration = Math.round(Float.parseFloat(m.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION))) / 1000;
-        m.release();
-        return duration;
     }
 
     static boolean shouldResizeImage(int origWidth, int origHeight, Options options) {
@@ -357,25 +350,39 @@ public class Utils {
     }
 
     static boolean isImageType(Uri uri, Context context) {
-        String imageMimeType = "image/";
-
-        if (uri.getScheme().equals("file")) {
-            return getMimeTypeFromFileUri(uri).contains(imageMimeType);
-        }
-
-        ContentResolver contentResolver = context.getContentResolver();
-        return contentResolver.getType(uri).contains(imageMimeType);
+      return Utils.isContentType("image/", uri, context);
     }
 
     static boolean isVideoType(Uri uri, Context context) {
-        String videoMimeType = "video/";
+        return Utils.isContentType("video/", uri, context);
+    }
 
-        if (uri.getScheme().equals("file")) {
-            return getMimeTypeFromFileUri(uri).contains(videoMimeType);
-        }
-        
-        ContentResolver contentResolver = context.getContentResolver();
-        return contentResolver.getType(uri).contains("video/");
+  /**
+   * Verifies the content typs of a file URI. A helper function
+   * for isVideoType and isImageType
+   *
+   * @param contentMimeType - "video/" or "image/"
+   * @param uri - file uri
+   * @param context - react context
+   * @return a boolean to determine if file is of specified content type i.e. image or video
+   */
+    static boolean isContentType(String contentMimeType, Uri uri, Context context) {
+      final String mimeType = getMimeType(uri, context);
+
+      if(mimeType != null) {
+        return mimeType.contains(contentMimeType);
+      }
+
+      return false;
+    }
+
+    static @Nullable String getMimeType(Uri uri, Context context) {
+      if (uri.getScheme().equals("file")) {
+        return getMimeTypeFromFileUri(uri);
+      }
+
+      ContentResolver contentResolver = context.getContentResolver();
+      return contentResolver.getType(uri);
     }
 
     static List<Uri> collectUrisFromData(Intent data) {
@@ -420,16 +427,36 @@ public class Utils {
         if (options.includeBase64) {
             map.putString("base64", getBase64String(uri, context));
         }
+
+        if(options.includeExtra) {
+          // Add more extra data here ...
+          map.putString("timestamp", imageMetadata.getDateTime());
+          map.putString("id", fileName);
+        }
+
         return map;
     }
 
-    static ReadableMap getVideoResponseMap(Uri uri, Context context) {
+    static ReadableMap getVideoResponseMap(Uri uri, Options options, Context context) {
         String fileName = uri.getLastPathSegment();
         WritableMap map = Arguments.createMap();
+        VideoMetadata videoMetadata = new VideoMetadata(uri, context);
+
         map.putString("uri", uri.toString());
         map.putDouble("fileSize", getFileSize(uri, context));
-        map.putInt("duration", getDuration(uri, context));
+        map.putInt("duration", videoMetadata.getDuration());
+        map.putInt("bitrate", videoMetadata.getBitrate());
         map.putString("fileName", fileName);
+        map.putString("type", getMimeType(uri, context));
+        map.putInt("width", videoMetadata.getWidth());
+        map.putInt("height", videoMetadata.getHeight());
+
+        if(options.includeExtra) {
+          // Add more extra data here ...
+          map.putString("timestamp", videoMetadata.getDateTime());
+          map.putString("id", fileName);
+        }
+
         return map;
     }
 
@@ -447,7 +474,7 @@ public class Utils {
                 uri = resizeImage(uri, context, options);
                 assets.pushMap(getImageResponseMap(oldUri, uri, options, context));
             } else if (isVideoType(uri, context)) {
-                assets.pushMap(getVideoResponseMap(uri, context));
+                assets.pushMap(getVideoResponseMap(uri, options, context));
             } else {
                 throw new RuntimeException("Unsupported file type");
             }

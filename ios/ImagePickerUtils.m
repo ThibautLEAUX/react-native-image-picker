@@ -6,30 +6,30 @@
 
 + (void) setupPickerFromOptions:(UIImagePickerController *)picker options:(NSDictionary *)options target:(RNImagePickerTarget)target
 {
+    if ([[options objectForKey:@"mediaType"] isEqualToString:@"video"]) {
+
+        if ([[options objectForKey:@"videoQuality"] isEqualToString:@"high"]) {
+            picker.videoQuality = UIImagePickerControllerQualityTypeHigh;
+        }
+        else if ([[options objectForKey:@"videoQuality"] isEqualToString:@"low"]) {
+            picker.videoQuality = UIImagePickerControllerQualityTypeLow;
+        }
+        else {
+            picker.videoQuality = UIImagePickerControllerQualityTypeMedium;
+        }
+    }
+    
     if (target == camera) {
         picker.sourceType = UIImagePickerControllerSourceTypeCamera;
+
+        if (options[@"durationLimit"] > 0) {
+            picker.videoMaximumDuration = [options[@"durationLimit"] doubleValue];
+        }
 
         if ([options[@"cameraType"] isEqualToString:@"front"]) {
             picker.cameraDevice = UIImagePickerControllerCameraDeviceFront;
         } else {
             picker.cameraDevice = UIImagePickerControllerCameraDeviceRear;
-        }
-
-        if ([[options objectForKey:@"mediaType"] isEqualToString:@"video"]) {
-
-            if ([[options objectForKey:@"videoQuality"] isEqualToString:@"high"]) {
-                picker.videoQuality = UIImagePickerControllerQualityTypeHigh;
-            }
-            else if ([[options objectForKey:@"videoQuality"] isEqualToString:@"low"]) {
-                picker.videoQuality = UIImagePickerControllerQualityTypeLow;
-            }
-            else {
-                picker.videoQuality = UIImagePickerControllerQualityTypeMedium;
-            }
-
-            if (options[@"durationLimit"] > 0) {
-                picker.videoMaximumDuration = [options[@"durationLimit"] doubleValue];
-            }
         }
     } else {
         picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
@@ -43,14 +43,22 @@
         picker.mediaTypes = @[(NSString *)kUTTypeImage, (NSString *)kUTTypeMovie];
     }
 
-    picker.modalPresentationStyle = UIModalPresentationCurrentContext;
+    picker.modalPresentationStyle = [RCTConvert UIModalPresentationStyle:options[@"presentationStyle"]];
 }
 
 + (PHPickerConfiguration *)makeConfigurationFromOptions:(NSDictionary *)options target:(RNImagePickerTarget)target API_AVAILABLE(ios(14))
 {
 #if __has_include(<PhotosUI/PHPicker.h>)
-    PHPickerConfiguration *configuration = [[PHPickerConfiguration alloc] init];
-    configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeCurrent;
+    PHPickerConfiguration *configuration;
+    
+    if(options[@"includeExtra"]) {
+        PHPhotoLibrary *photoLibrary = [PHPhotoLibrary sharedPhotoLibrary];
+        configuration = [[PHPickerConfiguration alloc] initWithPhotoLibrary:photoLibrary];
+    } else {
+        configuration = [[PHPickerConfiguration alloc] init];
+    }
+    
+    configuration.preferredAssetRepresentationMode = PHPickerConfigurationAssetRepresentationModeAutomatic;
     configuration.selectionLimit = [options[@"selectionLimit"] integerValue];
 
     if ([options[@"mediaType"] isEqualToString:@"video"]) {
@@ -95,6 +103,39 @@
     }
 }
 
++ (NSString *) getFileTypeFromUrl:(NSURL *)url {
+    CFStringRef fileExtension = (__bridge CFStringRef)[url pathExtension];
+    CFStringRef UTI = UTTypeCreatePreferredIdentifierForTag(kUTTagClassFilenameExtension, fileExtension, NULL);
+    CFStringRef MIMEType = UTTypeCopyPreferredTagWithClass(UTI, kUTTagClassMIMEType);
+    CFRelease(UTI);
+    return (__bridge_transfer NSString *)MIMEType;
+}
+
++ (NSNumber *) getFileSizeFromUrl:(NSURL *)url {
+    NSError *attributesError;
+    NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:[url path] error:&attributesError];
+    NSNumber *fileSizeNumber = [fileAttributes objectForKey:NSFileSize];
+    long fileSize = [fileSizeNumber longLongValue];
+
+    if (attributesError) {
+        return nil;
+    }
+
+    return [NSNumber numberWithLong:fileSize];
+}
+
++ (CGSize)getVideoDimensionsFromUrl:(NSURL *)url {
+    AVURLAsset *asset = [AVURLAsset URLAssetWithURL:url options:nil];
+    NSArray *tracks = [asset tracksWithMediaType:AVMediaTypeVideo];
+    
+    if ([tracks count] > 0) {
+        AVAssetTrack *track = [tracks objectAtIndex:0];
+        return track.naturalSize;
+    }
+    
+    return CGSizeMake(0, 0);
+}
+
 + (UIImage*)resizeImage:(UIImage*)image maxWidth:(float)maxWidth maxHeight:(float)maxHeight
 {
     if ((maxWidth == 0) || (maxHeight == 0)) {
@@ -125,6 +166,20 @@
     UIGraphicsEndImageContext();
 
     return newImage;
+}
+
++ (PHAsset *)fetchPHAssetOnIOS13:(NSDictionary<NSString *,id> *)info
+{
+    NSURL *referenceURL = [info objectForKey:UIImagePickerControllerReferenceURL];
+
+    if(!referenceURL) {
+      return nil;
+    }
+
+    // We fetch the asset like this to support iOS 10 and lower
+    // see: https://stackoverflow.com/a/52529904/4177049
+    PHFetchResult* fetchResult = [PHAsset fetchAssetsWithALAssetURLs:@[referenceURL] options:nil];
+    return fetchResult.firstObject;
 }
 
 @end

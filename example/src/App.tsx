@@ -2,7 +2,10 @@ import * as React from 'react';
 import {StyleSheet, SafeAreaView, View, Image, ScrollView} from 'react-native';
 import {DemoTitle, DemoButton, DemoResponse} from './components';
 
-import * as ImagePicker from '../../src';
+import * as ImagePicker from 'react-native-image-picker';
+
+/* toggle includeExtra */
+const includeExtra = true;
 
 export default function App() {
   const [response, setResponse] = React.useState<any>(null);
@@ -33,12 +36,12 @@ export default function App() {
         <DemoResponse>{response}</DemoResponse>
 
         {response?.assets &&
-          response?.assets.map(({uri}) => (
-            <View key={uri} style={styles.image}>
+          response?.assets.map(({uri}: {uri: string}) => (
+            <View key={uri} style={styles.imageContainer}>
               <Image
                 resizeMode="cover"
                 resizeMethod="scale"
-                style={{width: 200, height: 200}}
+                style={styles.image}
                 source={{uri: uri}}
               />
             </View>
@@ -58,10 +61,13 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     marginVertical: 8,
   },
-
-  image: {
+  imageContainer: {
     marginVertical: 24,
     alignItems: 'center',
+  },
+  image: {
+    width: 200,
+    height: 200,
   },
 });
 
@@ -79,17 +85,17 @@ const actions: Action[] = [
       saveToPhotos: true,
       mediaType: 'photo',
       includeBase64: false,
+      includeExtra,
     },
   },
   {
     title: 'Select Image',
     type: 'library',
     options: {
-      maxHeight: 200,
-      maxWidth: 200,
       selectionLimit: 0,
       mediaType: 'photo',
       includeBase64: false,
+      includeExtra,
     },
   },
   {
@@ -98,6 +104,7 @@ const actions: Action[] = [
     options: {
       saveToPhotos: true,
       mediaType: 'video',
+      includeExtra,
     },
   },
   {
@@ -106,6 +113,7 @@ const actions: Action[] = [
     options: {
       selectionLimit: 0,
       mediaType: 'video',
+      includeExtra,
     },
   },
   {
@@ -114,6 +122,7 @@ const actions: Action[] = [
     options: {
       selectionLimit: 0,
       mediaType: 'mixed',
+      includeExtra,
     },
   },
 ];

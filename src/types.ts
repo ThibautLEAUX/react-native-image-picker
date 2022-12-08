@@ -8,6 +8,15 @@ export interface ImageLibraryOptions {
   quality?: PhotoQuality;
   videoQuality?: AndroidVideoOptions | iOSVideoOptions;
   includeBase64?: boolean;
+  includeExtra?: boolean;
+  presentationStyle?:
+    | 'currentContext'
+    | 'fullScreen'
+    | 'pageSheet'
+    | 'formSheet'
+    | 'popover'
+    | 'overFullScreen'
+    | 'overCurrentContext';
 }
 
 export interface CameraOptions
@@ -23,10 +32,13 @@ export interface Asset {
   width?: number;
   height?: number;
   fileSize?: number;
-  type?: string; //TODO
+  type?: string;
   originalFileName?: string //Original file name in Android
   fileName?: string;
   duration?: number;
+  bitrate?: number;
+  timestamp?: string;
+  id?: string;
 }
 
 export interface ImagePickerResponse {
