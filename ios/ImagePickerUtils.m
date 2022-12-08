@@ -124,10 +124,6 @@
     return [NSNumber numberWithLong:fileSize];
 }
 
-+ (NSString *) getOriginalFileNameFromUrl:(NSURL *)url {
-    return [url lastPathComponent];
-}
-
 + (CGSize)getVideoDimensionsFromUrl:(NSURL *)url {
     AVURLAsset *asset = [AVURLAsset URLAssetWithURL:url options:nil];
     NSArray *tracks = [asset tracksWithMediaType:AVMediaTypeVideo];

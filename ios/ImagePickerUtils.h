@@ -21,8 +21,6 @@
 
 + (NSString *) getFileSizeFromUrl:(NSURL *)url;
 
-+ (NSString *) getOriginalFileNameFromUrl:(NSURL *)url;
-
 + (PHAsset *)fetchPHAssetOnIOS13:(NSDictionary<NSString *,id> *)info;
     
 @end

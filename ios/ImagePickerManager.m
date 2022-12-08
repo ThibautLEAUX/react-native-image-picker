@@ -193,13 +193,18 @@ NSData* extractImageData(UIImage* image){
     asset[@"fileName"] = fileName;
     asset[@"width"] = @(newImage.size.width);
     asset[@"height"] = @(newImage.size.height);
-    
+    NSArray<PHAssetResource*>* originalFileName = [PHAssetResource assetResourcesForAsset:phAsset];
+    if (originalFileName) {
+        asset[@"originalFileName"] = originalFileName[0].originalFilename;
+        asset[@"fileName"] =  originalFileName[0].originalFilename;
+    }
+
     if(phAsset){
         asset[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
         asset[@"id"] = phAsset.localIdentifier;
         // Add more extra data here ...
     }
-    
+
     return asset;
 }
 
@@ -225,10 +230,10 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     if ((target == camera) && [self.options[@"saveToPhotos"] boolValue]) {
         UISaveVideoAtPathToSavedPhotosAlbum(url.path, nil, nil, nil);
     }
-    
+
     if (![url.URLByResolvingSymlinksInPath.path isEqualToString:videoDestinationURL.URLByResolvingSymlinksInPath.path]) {
         NSFileManager *fileManager = [NSFileManager defaultManager];
-        
+
         // Delete file if it already exists
         if ([fileManager fileExistsAtPath:videoDestinationURL.path]) {
             [fileManager removeItemAtURL:videoDestinationURL error:nil];
@@ -258,10 +263,7 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     asset[@"fileSize"] = [ImagePickerUtils getFileSizeFromUrl:videoDestinationURL];
     asset[@"width"] = @(dimentions.width);
     asset[@"height"] = @(dimentions.height);
-    NSString* originalFileName = [ImagePickerUtils getOriginalFileNameFromUrl:videoDestinationURL];
-    if(originalFileName){
-        asset[@"originalFileName"] = originalFileName;
-    }
+    asset[@"originalFileName"] = fileName;
 
 
     if(phAsset){
