@@ -17,7 +17,9 @@ import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.webkit.MimeTypeMap;
-import android.database.cursor;
+import android.database.Cursor;
+import android.provider.OpenableColumns;
+
 
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
