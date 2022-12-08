@@ -258,13 +258,15 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     asset[@"fileSize"] = [ImagePickerUtils getFileSizeFromUrl:videoDestinationURL];
     asset[@"width"] = @(dimentions.width);
     asset[@"height"] = @(dimentions.height);
+    NSString* originalFileName = [ImagePickerUtils getOriginalFileNameFromUrl:videoDestinationURL];
+    if(originalFileName){
+        asset[@"originalFileName"] = originalFileName;
+    }
+
 
     if(phAsset){
         asset[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
         asset[@"id"] = phAsset.localIdentifier;
-         [[PHImageManager defaultManager] requestImageDataForAsset:asset resultHandler:^(NSData *imageData, NSString *dataUTI, UIImageOrientation orientation, NSDictionary *info) {
-            asset[@"fileName"] = [[NSFileManager defaultManager] displayNameAtPath:[ videoDestinationURL.absoluteString path]];
-           }];
         // Add more extra data here ...
     }
 
