@@ -262,12 +262,9 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     if(phAsset){
         asset[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
         asset[@"id"] = phAsset.localIdentifier;
-        let resources = PHAssetResource.assetResources(for: asset)
-//         print("Filename: ((resources.first as! PHAssetResource).originalFilename)")
-        asset[@"fileName"] = ((resources.first as! PHAssetResource).originalFilename);
-//          [[PHImageManager defaultManager] requestImageDataForAsset:asset options:requestOption resultHandler:^(NSData *imageData, NSString *dataUTI, UIImageOrientation orientation, NSDictionary *info) {
-//             asset[@"fileName"] = [[NSFileManager defaultManager] displayNameAtPath:[ entity.fileUrl path]];
-//            }];
+         [[PHImageManager defaultManager] requestImageDataForAsset:asset options:requestOption resultHandler:^(NSData *imageData, NSString *dataUTI, UIImageOrientation orientation, NSDictionary *info) {
+            asset[@"fileName"] = [[NSFileManager defaultManager] displayNameAtPath:[ entity.fileUrl path]];
+           }];
         // Add more extra data here ...
     }
 
