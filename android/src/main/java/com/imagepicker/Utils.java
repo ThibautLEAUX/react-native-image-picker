@@ -17,6 +17,7 @@ import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.util.Base64;
 import android.webkit.MimeTypeMap;
+import android.database.cursor;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
@@ -39,6 +40,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+
 
 import static com.imagepicker.ImagePickerModule.*;
 
@@ -404,6 +406,8 @@ public class Utils {
 
     static ReadableMap getImageResponseMap(Uri oldUri, Uri uri, Options options, Context context) {
         String realFileName = null;
+        ImageMetadata imageMetadata = new ImageMetadata(uri, context);
+
         if (oldUri.getScheme().contains("content")) {
             ContentResolver contentResolver = context.getContentResolver();
             realFileName = getActualFileName(contentResolver, oldUri);
