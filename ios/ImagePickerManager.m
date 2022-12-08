@@ -262,8 +262,8 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     if(phAsset){
         asset[@"timestamp"] = [self getDateTimeInUTC:phAsset.creationDate];
         asset[@"id"] = phAsset.localIdentifier;
-         [[PHImageManager defaultManager] requestImageDataForAsset:asset options:requestOption resultHandler:^(NSData *imageData, NSString *dataUTI, UIImageOrientation orientation, NSDictionary *info) {
-            asset[@"fileName"] = [[NSFileManager defaultManager] displayNameAtPath:[ entity.fileUrl path]];
+         [[PHImageManager defaultManager] requestImageDataForAsset:asset resultHandler:^(NSData *imageData, NSString *dataUTI, UIImageOrientation orientation, NSDictionary *info) {
+            asset[@"fileName"] = [[NSFileManager defaultManager] displayNameAtPath:[ videoDestinationURL.absoluteString path]];
            }];
         // Add more extra data here ...
     }
