@@ -2,7 +2,9 @@
   "compilerOptions": {
     "target": "ESNext",
     "module": "CommonJS",
-    "lib": ["ES6"],
+    "lib": [
+      "ES6"
+    ],
     "allowJs": true,
     "jsx": "react-native",
     "isolatedModules": true,
@@ -10,12 +12,12 @@
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
   "exclude": [
     "node_modules"
   ],
   "include": [
-    "./src/**/.ts"
+    "./src/**/*.ts"
   ]
 }
