@@ -421,14 +421,16 @@ public class Utils {
         WritableMap map = Arguments.createMap();
         map.putString("uri", uri.toString());
         map.putDouble("fileSize", getFileSize(uri, context));
-        map.putString("fileName", fileName);
         map.putString("type", getMimeTypeFromFileUri(uri));
         map.putInt("width", dimensions[0]);
         map.putInt("height", dimensions[1]);
         if (realFileName != null) {
-            map.putString("originalFileName", realFileName);    
+            map.putString("fileName", realFileName);
+        }else{
+            map.putString("fileName", fileName);
+
         }
-        
+
 
         if (options.includeBase64) {
             map.putString("base64", getBase64String(uri, context));

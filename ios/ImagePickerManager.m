@@ -190,13 +190,13 @@ NSData* extractImageData(UIImage* image){
         asset[@"fileSize"] = fileSizeValue;
     }
 
-    asset[@"fileName"] = fileName;
     asset[@"width"] = @(newImage.size.width);
     asset[@"height"] = @(newImage.size.height);
     NSArray<PHAssetResource*>* originalFileName = [PHAssetResource assetResourcesForAsset:phAsset];
     if (originalFileName) {
-        asset[@"originalFileName"] = originalFileName[0].originalFilename;
         asset[@"fileName"] =  originalFileName[0].originalFilename;
+    }else{
+        asset[@"fileName"] = fileName;
     }
 
     if(phAsset){
@@ -263,7 +263,6 @@ CGImagePropertyOrientation CGImagePropertyOrientationForUIImageOrientation(UIIma
     asset[@"fileSize"] = [ImagePickerUtils getFileSizeFromUrl:videoDestinationURL];
     asset[@"width"] = @(dimentions.width);
     asset[@"height"] = @(dimentions.height);
-    asset[@"originalFileName"] = fileName;
 
 
     if(phAsset){
